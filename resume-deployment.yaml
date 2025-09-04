@@ -11,7 +11,8 @@ spec:
       app: resume
   template:
     metadata:
-      app: resume
+      labels:
+        app: resume
     spec:
       containers:
         - name: resume
