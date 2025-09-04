@@ -2,7 +2,6 @@ pipeline {
     agent {
         kubernetes {
             label 'docker-kubectl-agent'
-            defaultContainer 'kubectl'
         }
     }
 
