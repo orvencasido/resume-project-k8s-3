@@ -1,5 +1,9 @@
 pipeline {
-    agent { label 'docker-agent' }
+    agent { 
+        kubernetes {
+            label 'docker-kubectl-agent'
+        }
+    }
 
     parameters {
         string(
@@ -10,15 +14,17 @@ pipeline {
     }
 
     environment {
-        DOCKER_IMAGE = "orvencasido/resume-project"
+        DOCKER_IMAGE = "orvencasido/resume-project-k8s-3"
         VERSION = "${params.VERSION ?: "1.${env.BUILD_NUMBER}"}"
     }
     
     stages {
         stage('Build') {
             steps {
-                script {
-                    sh "docker build -t ${DOCKER_IMAGE}:${VERSION} ."
+                container('docker') {
+                    script {
+                        sh "docker build -t ${DOCKER_IMAGE}:${VERSION} ."
+                    }
                 }
             }
         }
@@ -26,9 +32,11 @@ pipeline {
         stage('Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PW')]) {
-                    script {
-                        sh "echo ${DOCKER_PW} | docker login -u ${DOCKER_USER} --password-stdin"
-                        sh "docker push ${DOCKER_IMAGE}:${VERSION}"
+                    container('docker') {
+                        script {
+                            sh "echo ${DOCKER_PW} | docker login -u ${DOCKER_USER} --password-stdin"
+                            sh "docker push ${DOCKER_IMAGE}:${VERSION}"
+                        }
                     }
                 }
             }

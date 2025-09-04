@@ -1,5 +1,9 @@
 pipeline {
-    agent { label 'docker-agent' }
+    agent {
+        kubernetes {
+            label 'docker-kubectl-agent'
+        }
+    }
 
     parameters {
         string(
@@ -10,28 +14,32 @@ pipeline {
     }
 
     environment {
-        DOCKER_IMAGE = "orvencasido/resume-project"
-        DOCKER_CONTAINER = "resume"
+        DOCKER_IMAGE = "orvencasido/resume-project-k8s-3"
     }
 
     stages {
         stage('Pull') {
             steps {
-                script {
-                    echo "Pulling image: ${DOCKER_IMAGE}:${params.VERSION}"
-                    sh "docker pull ${DOCKER_IMAGE}:${params.VERSION}"
+                container('docker') {
+                    script {
+                        echo "Pulling image: ${DOCKER_IMAGE}:${params.VERSION}"
+                        sh "docker pull ${DOCKER_IMAGE}:${params.VERSION}"
+                    }
                 }
             }
         }
 
         stage('Deploy') {
             steps {
-                script {
-                    echo "Deploying container: ${DOCKER_CONTAINER} with image ${DOCKER_IMAGE}:${params.VERSION}"
-                    sh """
-                        docker rm -f ${DOCKER_CONTAINER} || true
-                        docker run -d --name ${DOCKER_CONTAINER} -p 80:80 ${DOCKER_IMAGE}:${params.VERSION}
-                    """
+                container('kubectl') {
+                    script {
+                        sh """
+                            kubectl apply -f resume-deployment.yaml -n default
+                            kubectl apply -f resume-service.yaml -n default
+                            kubectl set image deployment/resume resume=${DOCKER_IMAGE}:${VERSION} -n default
+                            kubectl rollout status deployment/resume -n default
+                        """
+                    }
                 }
             }
         }

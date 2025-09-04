@@ -30,5 +30,5 @@ spec:
 
   - name: kubeconfig
     hostPath:
-      path: /etc/rancher/k3s/k3s.yaml
+      path: /etc/rancher/k3s/k3s-jenkins.yaml
       type: File
