@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resume
+  labels:
+    app: resume
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: resume
+  template:
+    metadata:
+      app: resume
+    spec:
+      containers:
+        - name: resume
+          image: orvencasido/resume-project-k8s-3
+          ports:
+            - containerPort: 80
